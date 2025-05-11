@@ -1,0 +1,132 @@
+
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>时间的流动 - 粒子风</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap" rel="stylesheet">
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100vw;
+      height: 100vh;
+      font-family: 'Orbitron', sans-serif;
+      background-color: black;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: white;
+    }
+
+    .stopwatch {
+      font-size: 3vw;
+      margin-bottom: 1vh;
+      text-shadow: 0 0 10px rgba(255,255,255,0.8);
+      z-index: 2;
+    }
+
+    .clock {
+      font-size: 10vw;
+      text-shadow: 0 0 25px rgba(255,255,255,0.9);
+      animation: glow 2s ease-in-out infinite alternate;
+      z-index: 2;
+    }
+
+    @keyframes glow {
+      from { opacity: 0.85; text-shadow: 0 0 15px rgba(255,255,255,0.6); }
+      to { opacity: 1; text-shadow: 0 0 35px rgba(255,255,255,1); }
+    }
+
+    canvas {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="particles"></canvas>
+  <div class="stopwatch" id="stopwatch">已浪费时间：00:00:00</div>
+  <div class="clock" id="clock">00:00:00</div>
+
+  <script>
+    // stopwatch & clock
+    let startTime = Date.now();
+    function updateClock() {
+      const now = new Date();
+      document.getElementById('clock').textContent = 
+        now.toLocaleTimeString('zh-CN', { hour12: false });
+    }
+    function updateStopwatch() {
+      const elapsed = Date.now() - startTime;
+      const h = String(Math.floor(elapsed / 3600000)).padStart(2, '0');
+      const m = String(Math.floor((elapsed % 3600000) / 60000)).padStart(2, '0');
+      const s = String(Math.floor((elapsed % 60000) / 1000)).padStart(2, '0');
+      document.getElementById('stopwatch').textContent = `已浪费时间：${h}:${m}:${s}`;
+    }
+    setInterval(updateClock, 1000);
+    setInterval(updateStopwatch, 1000);
+    updateClock();
+    updateStopwatch();
+
+    // particles
+    const canvas = document.getElementById('particles');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    class Particle {
+      constructor() {
+        this.reset();
+      }
+      reset() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.vx = (Math.random() - 0.5) * 0.7;
+        this.vy = (Math.random() - 0.5) * 0.7;
+        this.size = Math.random() * 2 + 1;
+      }
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) {
+          this.reset();
+        }
+      }
+      draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+        ctx.fill();
+      }
+    }
+
+    for (let i = 0; i < 200; i++) {
+      particles.push(new Particle());
+    }
+
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (const p of particles) {
+        p.update();
+        p.draw();
+      }
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+  </script>
+</body>
+</html>
